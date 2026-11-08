@@ -1,0 +1,17 @@
+cff-version: 1.2.0
+message: "If you use this software or data, please cite the paper below."
+title: "SFAO: Silkworm Feeding and Avoidance Optimization (code and results)"
+authors:
+  - family-names: "[Maneesaeng]"
+    given-names: "[Thanapt]"
+    affiliation: "[Phetchabun Rajabhat University]"
+license: MIT
+repository-code: "https://github.com/nazzdexman/sfao"
+preferred-citation:
+  type: article
+  title: "Silkworm Feeding and Avoidance Optimization: A Mechanism-Audited Metaheuristic Benchmarked Against CEC Competition Winners up to 2024"
+  authors:
+    - family-names: "[Family name]"
+      given-names: "[Given name]"
+  journal: "International Journal of Intelligent Engineering and Systems"
+  year: 2026
