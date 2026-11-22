@@ -131,8 +131,8 @@ def arr(x1, y1, x2, y2, c="#333333"):
     ax.annotate("", (x2, y2), (x1, y1), arrowprops=dict(arrowstyle="-|>", lw=.7, color=c))
 W, H = 29, 10
 X = [2, 35.5, 69]
-box(X[0], 37, W, H, "Initialise $N_0$ worms uniformly\n(rearing-density cap, Eq. 3)", "#fdebd0")
-box(X[1], 37, W, H, "M9 cocooning: shrink to $N_{target}$\n(mature worms first);\nM5 instar schedule + molting", "#fdebd0")
+box(X[0], 37, W, H, "Initialise $N_0$ worms uniformly\n(rearing-density cap, Eq. 2)", "#fdebd0")
+box(X[1], 37, W, H, "M9 cocooning: shrink to $N_{target}$\n(Eq. 3; mature worms first);\nM5 instar schedule + molting", "#fdebd0")
 box(X[2], 37, W, H, "Per-iteration state: $\\rho$, $L$, $r_c$;\nM4 crowding/depletion $q^{eff}$;\nM8 matrix $B$, scales $d$", "#fdebd0")
 box(X[2], 21, W, H, "Each worm, random order:\nM1 attraction $-$ M3 avoidance\n$+$ M4 expulsion $\\rightarrow$ body $b_i$", "#d6eaf8")
 box(X[1], 21, W, H, "M2 head-swing: $m_s$ bites\n(arc / nibble / memory-guided)\ngreedy acceptance", "#d6eaf8")

@@ -48,7 +48,7 @@ class SFAO:
                  # เข้าดักแด้: ฝูงเริ่มใหญ่แล้วเล็กลง (หนอนที่โตเต็มที่ชักใยออกจากฝูง)
                  use_cocoon=False, cocoon_init=18, cocoon_min=8, cocoon_cap=None, food_per_worm=None,
                  # ชักใยแบบปรับวงได้: วงแคบลงเมื่อเจอที่ดี (ผนังรังแน่นขึ้น) และใช้งบช่วงท้ายมากขึ้น
-                 spin_mode="fixed", spin_share=0.5):
+                 spin_mode="fixed", spin_share=0.5, revision_repair="clip"):
         self.N = pop_size
         self.stage_ends = np.array(stage_ends)
         self.reach, self.bites = reach, bites
@@ -72,6 +72,7 @@ class SFAO:
         # ความหนาแน่นการเลี้ยง: อาหาร (งบ FE) ต่อหนอนหนึ่งตัวอย่างน้อยเท่านี้ -> ฝูงเริ่ม <= max_fe / food_per_worm
         self.food_per_worm = food_per_worm
         self.spin_mode, self.spin_share = spin_mode, spin_share
+        self.revision_repair = revision_repair
 
     # ------------------------------------------------------------------
     def optimize(self, func, dim, lb, ub, max_fe, seed=None, log=False):
@@ -88,6 +89,7 @@ class SFAO:
                 N = max(self.N, min(N, int(max_fe // self.food_per_worm)))
             N_min = max(4, min(self.cocoon_min, N))
             N0 = N
+        self.revision_m7_first_fe = None
         self.fe = 0
         self.best_f, self.best_x = np.inf, None
         curve = []
@@ -102,6 +104,11 @@ class SFAO:
                 self.best_f, self.best_x = v, x.copy()
             curve.append(self.best_f)
             return v
+
+        def repair(y):
+            if self.revision_repair == "reflect":
+                return ub - np.abs((y - lb) % (2 * span) - span)
+            return np.clip(y, lb, ub)
 
         def unit(v):
             n = np.linalg.norm(v)
@@ -167,7 +174,7 @@ class SFAO:
                     spread = np.mean(np.linalg.norm(X - X.mean(0), axis=1)) + 1e-12
                     for w in worst:
                         egg = eggs[rng.integers(len(eggs))]
-                        X[w] = np.clip(egg + 0.5 * spread * rng.standard_normal(D) / np.sqrt(D), lb, ub)
+                        X[w] = repair(egg + 0.5 * spread * rng.standard_normal(D) / np.sqrt(D))
                         F[w] = evaluate(X[w])
                         infected[w], sev[w] = False, 0.0
 
@@ -253,7 +260,7 @@ class SFAO:
                     if rank >= self.C:   # แย่งไม่ทัน
                         step += self.eta * L * unit(xi - X[nb].mean(0) + 1e-9 * rng.standard_normal(D))
 
-                body = np.clip(xi + (1.0 - h) * step, lb, ub)
+                body = repair(xi + (1.0 - h) * step)
 
                 # ---------- M2 ส่ายหัวกินใบ ----------
                 cand, ctype = [body], [-1]
@@ -282,9 +289,9 @@ class SFAO:
                             y = body.copy()
                             y[dims] += (1.0 - h) * L * rng.standard_normal(k_d) / np.sqrt(k_d)
                             ctype.append(1)
-                        cand.append(np.clip(y, lb, ub))
+                        cand.append(repair(y))
                 elif not self.use["attract"]:
-                    cand = [np.clip(xi + L * rng.standard_normal(D) / np.sqrt(D), lb, ub)]
+                    cand = [repair(xi + L * rng.standard_normal(D) / np.sqrt(D))]
                 fc = [evaluate(c) for c in cand]
                 k = int(np.argmin(fc))
                 for t_, f_ in zip(ctype, fc):
@@ -373,7 +380,7 @@ class SFAO:
                         else:                              # opposition + หนีจุดระบาด
                             xn = lb + ub - X[c] + 0.1 * span * rng.standard_normal(D)
                             xn += 0.5 * L * unit(xn - sick_c)
-                        X[c] = np.clip(xn, lb, ub)
+                        X[c] = repair(xn)
                         F[c] = evaluate(X[c])
                         infected[c], sev[c], stag[c], immune[c] = False, 0.0, 0, self.T_imm
 
@@ -386,10 +393,12 @@ class SFAO:
                 n_spin = max(self.spin_bites, int(self.spin_share * N * self.bites[s]))
                 for _ in range(n_spin):
                     if self.fe >= max_fe: break
+                    if self.revision_m7_first_fe is None:
+                        self.revision_m7_first_fe = self.fe + 1
                     z = rng.standard_normal(D)
                     step = (Bm @ (dm * z)) / np.sqrt(D) if self.use["memory"] else z / np.sqrt(D)
                     prev = self.best_x.copy(); fb_old = self.best_f
-                    y = np.clip(prev + spin_sigma * step, lb, ub)
+                    y = repair(prev + spin_sigma * step)
                     evaluate(y)
                     if self.best_f < fb_old:
                         spin_sigma *= 1.5
@@ -413,7 +422,7 @@ class SFAO:
                 w0 = rng.uniform(0, 2 * np.pi)
                 for k in range(self.spin_bites):
                     tau = w0 + 2 * np.pi * k / self.spin_bites
-                    y = np.clip(self.best_x + Lf * (np.sin(tau) * u1 + 0.5 * np.sin(2 * tau) * u2), lb, ub)
+                    y = repair(self.best_x + Lf * (np.sin(tau) * u1 + 0.5 * np.sin(2 * tau) * u2))
                     evaluate(y)
                 bi = int(np.argmax(F))           # แทนตัวแย่สุดด้วย elite ที่ขัดเกลาแล้ว
                 X[bi], F[bi] = self.best_x.copy(), self.best_f
@@ -421,5 +430,7 @@ class SFAO:
             self.history["infected"].append(infected.mean())
             self.history["diversity"].append(spread)
 
+        self.revision_memory = mem[:mem_n].copy()
+        self.revision_reach = max(L, 1e-12 * span.mean())
         curve = np.array(curve[:max_fe])
         return self.best_x, self.best_f, curve

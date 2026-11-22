@@ -2,7 +2,9 @@
 
 Source code, experiment drivers and run-level results for the paper
 
-> Thanapat, "Silkworm Feeding and Avoidance Optimization: A Mechanism-Audited Metaheuristic Benchmarked Against CEC Competition Winners up to 2024", *International Journal of Intelligent Engineering and Systems* (submitted).
+> T. Maneesaeng, "Silkworm Feeding and Avoidance Optimization with Mechanism Analysis and Benchmarking Against Selected CEC Competition Winners", *International Journal of Intelligent Engineering and Systems* (under revision).
+
+**Release v1.1.0** adds the experiments and scripts of the second revision: the corrected Fig. 2 script, the revision audit, the Apple M1 replication, the CEC2022 F2 M7 × M8 factorial, the RDE26-SOP comparisons on CEC2022 F2 and CEC2017 F4, and the pre-specified full-budget geometry experiment (learned, randomized and isotropic M7). See `REVISION_README.md` and `follow_up/README.md`. Table and figure numbers in the sections below refer to the first submission.
 
 SFAO is a population-based metaheuristic for box-constrained continuous minimization built from nine explicitly specified operators (attraction, adaptive head-swing local search, avoidance memory, crowding/depletion, instar schedule, disease-driven culling, adaptive cocoon spinning, directional memory, and population reduction with a budget-based density cap).
 
